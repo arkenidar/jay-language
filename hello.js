@@ -119,8 +119,12 @@ function tests1(){
 
 function tests2(){
     // outputs *local1*
-    let local_context={...globalThis, "local_variable1":"*local1*"}
+    let local_context={...globalThis, "local_variable1":"*local1*", "local_variable2":[111,222,333]}
     console.log( get(["$attr","local_variable1"], local_context) )
+
+    // outputs 333
+    console.log( local_context.local_variable2[2])
+    console.log( get(["$attr","local_variable2",2], local_context) )
 }
 
 tests1()
