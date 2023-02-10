@@ -118,3 +118,8 @@ function get(json){
 }
 
 get(["$expr", ["$attr","console","log"], ["$call", ["$val", 123]]])
+
+get(["$attr_set", "var_name", ["$val", {"counter":1}]])
+var_name.counter += 10
+get(["$expr",["$attr","var_name"],["$attr_set","counter",["$expr",["$attr","var_name","counter"],["$op","+"],["$val",10]]]])
+console.log(get(["$attr","var_name","counter"]))
