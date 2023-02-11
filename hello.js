@@ -2,7 +2,9 @@
 
 // 8 keywords: "$func","$skip","$val","$expr","$op","$attr","$attr_set","$call"
 
-globalThis. $expr = function $expr(expr, context){
+globalThis. $language_keywords = { }
+let special = globalThis. $language_keywords
+special. $expr = function $expr(expr, context){
 
     if(expr[0]!=="$expr"){
         console.error("mismatch in $expr :",expr[0])
@@ -20,22 +22,23 @@ globalThis. $expr = function $expr(expr, context){
         let previous_value = current_value;
 
         if(current[0]==="$attr"){
-            current_value = $attr(current, context)
+            current_value = special.$attr(current, context)
             new_value = true
 
         } else if(current[0]==="$attr_set"){
-            current_value = $attr_set(current, current_value, context)
+            let of_object = current_value !== null ? current_value : context;
+            current_value = special.$attr_set(current, of_object, context)
             new_value = true
 
         } else if(current[0]==="$op"){
             operation_id = current[1]
 
         } else if(current[0]==="$val"){
-            current_value = $val(current)
+            current_value = special.$val(current)
             new_value = true
 
         } else if(current[0]==="$expr"){
-            current_value = $expr(current, context)
+            current_value = special.$expr(current, context)
             new_value = true
 
         } else if(current[0]==="$call"){
@@ -75,11 +78,11 @@ globalThis. $expr = function $expr(expr, context){
     return current_value
 }
 
-globalThis. $val= function $val(val){
+special. $val= function $val(val){
     return val[1]
 }
 
-globalThis. $attr= function $attr(attr, context){
+special. $attr= function $attr(attr, context){
     let current = context;
     for(let index = 1; index<attr.length; index += 1){
         let attribute_id = attr[index];
@@ -93,13 +96,13 @@ globalThis. $attr= function $attr(attr, context){
     return current
 }
 
-globalThis. $attr_set= function $attr_set(attr_set, of_object, context){
+special. $attr_set= function $attr_set(attr_set, of_object, context){
     return of_object[attr_set[1]] = get(attr_set[2], context)
 }
 
-function get(json, context=globalThis){
-    if(typeof context[json[0]] == "function"){
-        return context[json[0]](json, context)
+function get(json, context_call = globalThis){
+    if(typeof $language_keywords[json[0]] == "function"){
+        return $language_keywords[json[0]](json, context_call)
     } else {
         console.error("no function found for get() :",json[0])
         return null
@@ -118,9 +121,9 @@ function tests1(){
 }
 
 function tests2(){
-    let glob={};
+    let glob = globalThis
     // outputs *local1*
-    let local_context={...globalThis,glob, "local_variable1":"*local1*", "local_variable2":[111,222,333]}
+    let local_context = { /*...globalThis,*/ glob, "local_variable1":"*local1*", "local_variable2":[111,222,333]}
     console.log( get(["$attr","local_variable1"], local_context) )
 
     // outputs 333
@@ -139,6 +142,9 @@ function tests2(){
     glob.global_variable1 = 11
     get(["$expr",["$attr","glob"],["$attr_set","global_variable1",["$val",22]]], local_context)
     console.log("global_variable1",glob.global_variable1)
+
+    get(["$expr", /* ["$attr","glob"], */ ["$attr_set","local_variable3",["$val","*lv3*"]]], local_context)
+    console.log("local_context", local_context)
 }
 
 tests1()
