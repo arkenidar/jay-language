@@ -118,13 +118,27 @@ function tests1(){
 }
 
 function tests2(){
+    let glob={};
     // outputs *local1*
-    let local_context={...globalThis, "local_variable1":"*local1*", "local_variable2":[111,222,333]}
+    let local_context={...globalThis,glob, "local_variable1":"*local1*", "local_variable2":[111,222,333]}
     console.log( get(["$attr","local_variable1"], local_context) )
 
     // outputs 333
     console.log( local_context.local_variable2[2])
     console.log( get(["$attr","local_variable2",2], local_context) )
+
+    /*
+    $attr_set of a glob "global variable" notably in local_context (!).
+    note that copying globalThis with "..." is not enough, because we want a reference (!)
+    not a copy (when assigning with $attr_set this becomes evident).
+    next steps are being pondered. probably a combination of "glob"
+    and "super-globals" (PHP terminology) such as
+    the "$xyz functions" being globally available
+    without specific mention to global (i.e. "super-globals").
+    */
+    glob.global_variable1 = 11
+    get(["$expr",["$attr","glob"],["$attr_set","global_variable1",["$val",22]]], local_context)
+    console.log("global_variable1",glob.global_variable1)
 }
 
 tests1()
